@@ -164,3 +164,7 @@ cython_debug/
 
 # Ruff cache
 .ruff_cache/
+
+# my scratchpad
+hack/**
+hack.md

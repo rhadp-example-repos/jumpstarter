@@ -1,36 +1,23 @@
 PKG_TARGETS = $(subst packages/,,$(wildcard packages/*))
-EXAMPLE_TARGETS = $(subst examples/,example-,$(wildcard examples/*))
-DOC_LISTEN ?= --host 127.0.0.1
+
+RELEASE_TAG = v0.1.3
+RELEASE_BRANCH = develop
 
 default: build
-
-docs:
-	uv run --isolated --all-packages --group docs $(MAKE) -C docs html
-
-docs-all:
-	./docs/make-all-versions.sh
-
-serve-all:
-	python3 -m http.server 8000 --bind 127.0.0.1 -d ./docs/build_all
-
-serve-docs:
-	uv run --isolated --all-packages --group docs $(MAKE) -C docs serve HOST="$(DOC_LISTEN)"
-
-clean-docs:
-	uv run --isolated --all-packages --group docs $(MAKE) -C docs clean
-
-doctest:
-	uv run --isolated --all-packages --group docs $(MAKE) -C docs doctest
 
 test-%: packages/%
 	uv run --isolated --directory $< pytest
 
+test-packages: $(addprefix test-,$(PKG_TARGETS))
+
+test: test-packages
+
 mypy-%: packages/%
 	uv run --isolated --directory $< mypy .
 
-test-packages: $(addprefix test-,$(PKG_TARGETS))
-
 mypy-packages: $(addprefix mypy-,$(PKG_TARGETS))
+
+mypy: mypy-packages
 
 clean-venv:
 	-rm -rf ./.venv
@@ -44,12 +31,7 @@ clean-test:
 	-rm coverage.xml
 	-rm -rf htmlcov
 
-sync:
-	uv sync --all-packages --all-extras
-
-test: test-packages doctest
-
-mypy: mypy-packages
+clean: clean-venv clean-build clean-test
 
 generate:
 	buf generate
@@ -57,17 +39,13 @@ generate:
 build:
 	uv build --all --out-dir dist
 
-clean: clean-docs clean-venv clean-build clean-test
+build-sync:
+	uv sync --all-packages --all-extras
 
-.PHONY: sync docs docs-all serve-all test test-packages build clean-test clean-docs clean-venv clean-build \
-	mypy-jumpstarter \
-	mypy-jumpstarter-cli-admin \
-	mypy-jumpstarter-driver-can \
-	mypy-jumpstarter-driver-dutlink \
-	mypy-jumpstarter-driver-network \
-	mypy-jumpstarter-driver-raspberrypi \
-	mypy-jumpstarter-driver-sdwire \
-	mypy-jumpstarter-driver-tftp \
-	mypy-jumpstarter-driver-yepkit \
-	mypy-jumpstarter-kubernetes \
-	mypy-jumpstarter-protocol
+build-container: clean
+	podman build -t rhadp-example-repos/jumpstarter -f Dockerfile.ubi9 .
+
+release:
+	git tag $(RELEASE_TAG) $(RELEASE_BRANCH)
+	git push origin $(RELEASE_BRANCH)
+	git push origin tag $(RELEASE_TAG)

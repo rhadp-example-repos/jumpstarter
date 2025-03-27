@@ -2,22 +2,22 @@ name: Build and push container image
 on:
   workflow_dispatch:
   push:
+    branches: develop
   merge_group:
 
 env:
-  PUSH: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+  PUSH: ${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
   REGISTRY: quay.io
-  QUAY_ORG: quay.io/jumpstarter-dev
 
 jobs:
   build-and-push-image:
     strategy:
       matrix:
         image:
-          - jumpstarter-dev/jumpstarter Dockerfile
-          - jumpstarter-dev/jumpstarter-utils Dockerfile.utils
-          - jumpstarter-dev/jumpstarter-dev .devfile/Containerfile
-          - jumpstarter-dev/jumpstarter-devspace .devfile/Containerfile.client
+          - rhadp-example-repos/jumpstarter Dockerfile.ubi9
+          #- rhadp-example-repos/jumpstarter-dev .devfile/Containerfile.ubi9
+          #- rhadp-example-repos/jumpstarter-dev .devfile/Containerfile
+          #- rhadp-example-repos/jumpstarter-devspace .devfile/Containerfile.client
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,9 +46,6 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "VERSION=${VERSION}"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -57,7 +54,7 @@ jobs:
         if: ${{ env.PUSH == 'true' }}
         with:
           registry: ${{ env.REGISTRY }}
-          username: jumpstarter-dev+jumpstarter_ci
+          username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
