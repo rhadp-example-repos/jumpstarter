@@ -14,6 +14,7 @@ FROM registry.access.redhat.com/ubi9/python-312:9.5
 
 ENV JUMPSTARTER_CONFIG=/opt/app-root/src/.config/jumpstarter/clients
 ENV KUBE_CONFIG=/opt/app-root/src/.kube
+ENV WORKING_DIR=/opt/app-root/src/workspace
 
 RUN --mount=from=wheels,source=/src/dist,target=$HOME/dist \
     pip install $HOME/dist/*.whl
@@ -25,3 +26,7 @@ RUN mkdir -p ${JUMPSTARTER_CONFIG} && \
 RUN mkdir -p ${KUBE_CONFIG} && \
     chown -R 1001:0 ${KUBE_CONFIG} && \
     fix-permissions ${KUBE_CONFIG} -P
+
+RUN mkdir -p ${WORKING_DIR} && \
+    chown -R 1001:0 ${WORKING_DIR} && \
+    fix-permissions ${WORKING_DIR} -P
