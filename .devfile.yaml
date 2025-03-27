@@ -11,7 +11,7 @@ projects:
   - name: jumpstarter
     git:
       remotes:
-        origin: https://github.com/jumpstarter-dev/jumpstarter.git
+        origin: https://github.com/rhadp-example-repos/jumpstarter.git
 components:
   - name: runtime
     container:
